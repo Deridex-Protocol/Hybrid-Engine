@@ -1,0 +1,577 @@
+basePath: /api/v1
+definitions:
+  api.Response:
+    properties:
+      data:
+        type: object
+      desc:
+        type: string
+    type: object
+  handlers.Bar:
+    properties:
+      close:
+        type: number
+      high:
+        type: number
+      low:
+        type: number
+      open:
+        type: number
+      time:
+        type: integer
+      volume:
+        type: number
+    type: object
+  handlers.BuildLimitOrderReq:
+    properties:
+      amount:
+        type: string
+      expires:
+        type: integer
+      market_id:
+        type: string
+      order_type:
+        type: string
+      price:
+        type: string
+      side:
+        type: string
+    required:
+    - amount
+    - market_id
+    - order_type
+    - price
+    - side
+    type: object
+  handlers.BuildMarketOrderReq:
+    properties:
+      amount:
+        type: string
+      expires:
+        type: integer
+      market_id:
+        type: string
+      side:
+        type: string
+    required:
+    - amount
+    - market_id
+    - side
+    type: object
+  handlers.BuildOrderResp:
+    properties:
+      order_id:
+        type: string
+    type: object
+  handlers.CandlesResp:
+    properties:
+      candles:
+        items:
+          $ref: '#/definitions/handlers.Bar'
+        type: array
+    type: object
+  handlers.GetOrdersInfoResp:
+    properties:
+      unrealized_pnl:
+        type: number
+    type: object
+  handlers.Market:
+    properties:
+      amount_decimals:
+        type: integer
+      amount24h:
+        type: number
+      base_token:
+        type: string
+      base_token_address:
+        type: string
+      base_token_decimals:
+        type: integer
+      base_token_name:
+        type: string
+      id:
+        type: string
+      last_price:
+        type: number
+      min_order_size:
+        type: number
+      price_decimals:
+        type: integer
+      price24h:
+        type: number
+      quote_token:
+        type: string
+      quote_token_address:
+        type: string
+      quote_token_decimals:
+        type: integer
+      quote_token_name:
+        type: string
+      quote_token_volume24h:
+        type: number
+      supported_order_types:
+        items:
+          type: string
+        type: array
+    type: object
+  handlers.OrdersResp:
+    properties:
+      count:
+        type: integer
+      orders:
+        items:
+          $ref: '#/definitions/models.Order'
+        type: array
+    type: object
+  handlers.PlaceOrderReq:
+    properties:
+      order_id:
+        type: string
+      signature:
+        type: string
+    required:
+    - order_id
+    - signature
+    type: object
+  handlers.Snapshot:
+    properties:
+      asks:
+        items:
+          items:
+            type: string
+          type: array
+        type: array
+      bids:
+        items:
+          items:
+            type: string
+          type: array
+        type: array
+      sequence:
+        type: integer
+    type: object
+  handlers.TradesResp:
+    properties:
+      count:
+        type: integer
+      trades:
+        items:
+          $ref: '#/definitions/models.Trade'
+        type: array
+    type: object
+  models.Order:
+    properties:
+      amount:
+        type: number
+      available_amount:
+        type: number
+      canceled_amount:
+        type: number
+      confirmed_amount:
+        type: number
+      created_at:
+        type: string
+      flags:
+        type: string
+      id:
+        type: string
+      market_id:
+        type: string
+      pending_amount:
+        type: number
+      price:
+        type: number
+      side:
+        type: string
+      signature:
+        type: string
+      status:
+        type: string
+      trader_address:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Trade:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      executed_at:
+        type: string
+      id:
+        type: integer
+      maker:
+        type: string
+      maker_order_id:
+        type: string
+      market_id:
+        type: string
+      price:
+        type: number
+      status:
+        type: string
+      taker:
+        type: string
+      taker_order_id:
+        type: string
+      taker_side:
+        type: string
+      transaction_hash:
+        type: string
+      transaction_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+host: deridex-dev.ml
+info:
+  contact:
+    email: support@deridex-dev.ml
+    name: API Support
+    url: https://deridex-dev.ml/support
+  description: This is a documentation for the Deridex market backend API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Deridex Backend API
+  version: 1.0.0
+paths:
+  /markets:
+    get:
+      description: Returns list of market. Response contains universal datastructure.
+        'data' field contains response value, in case of errors - 'status' and 'desc'
+        contain description of the error, and the 'data' value is empty
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Array of existing markets
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/handlers.Market'
+                  type: array
+              type: object
+      summary: Get list of markets
+      tags:
+      - Markets
+  /markets/{market_id}/candles:
+    get:
+      description: Returns trading view candles of the market. Response contains universal
+        datastructure. 'data' field contains response value, in case of errors - 'status'
+        and 'desc' contain description of the error, and the 'data' value is empty
+      parameters:
+      - description: Market ID
+        in: path
+        name: market_id
+        required: true
+        type: integer
+      - description: Period start
+        in: query
+        name: from
+        required: true
+        type: integer
+      - description: Period end
+        in: query
+        name: to
+        required: true
+        type: integer
+      - description: Data granularity in seconds
+        in: query
+        name: granularity
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Candle values are inside data field
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.CandlesResp'
+              type: object
+      summary: Get trading view candles of the market by market id
+      tags:
+      - Markets
+  /markets/{market_id}/orderbook:
+    get:
+      description: Returns market order book. Response contains universal data structure.
+        'data' field contains response value, in case of errors - 'status' and 'desc'
+        contain description of the error, and the 'data' value is empty
+      parameters:
+      - description: Market ID
+        in: path
+        name: market_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Market orderbook is inside data field
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.Snapshot'
+              type: object
+      summary: Get order book of the market by market id
+      tags:
+      - Markets
+  /markets/{market_id}/trades:
+    get:
+      description: Returns all market trades. Response contains universal datastructure.
+        'data' field contains response value, in case of errors - 'status' and 'desc'
+        contain description of the error, and the 'data' value is empty
+      parameters:
+      - description: Market ID
+        in: path
+        name: market_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Market trades are inside data field
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.TradesResp'
+              type: object
+      summary: Get market trades by market id
+      tags:
+      - Markets
+  /markets/{market_id}/trades/mine:
+    get:
+      description: Returns all account trades in the certain market. Response contains
+        universal datastructure. 'data' field contains response value, in case of
+        errors - 'status' and 'desc' contain description of the error, and the 'data'
+        value is empty. This request requires authentication
+      parameters:
+      - description: Market ID
+        in: path
+        name: market_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account trades are inside data field
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.TradesResp'
+              type: object
+      summary: Get account trades of the certain market by market id
+      tags:
+      - Markets
+  /orders:
+    get:
+      description: Returns all account orders. Response contains universal data structure.
+        'data' field contains response value, in case of errors - 'status' and 'desc'
+        contain description of the error, and the 'data' value is empty. This request
+        requires authentication
+      parameters:
+      - description: Market ID
+        in: query
+        name: market_id
+        required: true
+        type: string
+      - description: Status or statuses separated by comma
+        in: query
+        name: status
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Rows per page
+        in: query
+        name: perPage
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account orders are inside data field
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.OrdersResp'
+              type: object
+      summary: Get all account orders
+      tags:
+      - Orders
+    post:
+      description: Places existing order on the market. Response contains universal
+        datastructure. 'data' field contains response value, in case of errors - 'status'
+        and 'desc' contain description of the error, and the 'data' value is empty.
+        This request requires authentication
+      parameters:
+      - description: Contains parameters of existing order
+        in: body
+        name: order_params
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PlaceOrderReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Contains result of order placing
+          schema:
+            $ref: '#/definitions/api.Response'
+      summary: Place existing order
+      tags:
+      - Orders
+  /orders/{order_id}:
+    delete:
+      description: Cancels order placed on the market. Response contains universal
+        datastructure. 'data' field contains response value, in case of errors - 'status'
+        and 'desc' contain description of the error, and the 'data' value is empty.
+        This request requires authentication
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Contains result of order cancellation
+          schema:
+            $ref: '#/definitions/api.Response'
+      summary: Cancel placed order
+      tags:
+      - Orders
+    get:
+      description: Returns single order by order id. Response contains universal data
+        structure. 'data' field contains response value, in case of errors - 'status'
+        and 'desc' contain description of the error, and the 'data' value is empty.
+        This request requires authentication
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order data is inside data field
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Order'
+              type: object
+      summary: Get single order by order id
+      tags:
+      - Orders
+  /orders/build/limit:
+    post:
+      description: Builds and returns new limit order. Response contains universal
+        data structure. 'data' field contains response value, in case of errors -
+        'status' and 'desc' contain description of the error, and the 'data' value
+        is empty. This request requires authentication
+      parameters:
+      - description: Contains parameters of new order
+        in: body
+        name: order_params
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.BuildLimitOrderReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order data is inside data field
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.BuildOrderResp'
+              type: object
+      summary: Build a new limit order
+      tags:
+      - Orders
+  /orders/build/market:
+    post:
+      description: Builds and returns new market order. Response contains universal
+        datastructure. 'data' field contains response value, in case of errors - 'status'
+        and 'desc' contain description of the error, and the 'data' value is empty.
+        This request requires authentication
+      parameters:
+      - description: Contains parameters of new order
+        in: body
+        name: order_params
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.BuildMarketOrderReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order data is inside data field
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.BuildOrderResp'
+              type: object
+      summary: Build a new market order
+      tags:
+      - Orders
+  /orders/info:
+    get:
+      description: Returns all account orders info. Response contains universal datastructure.
+        'data' field contains response value, in case of errors - 'status' and 'desc'
+        contain description of the error, and the 'data' value is empty. This request
+        requires authentication
+      parameters:
+      - description: Market ID
+        in: query
+        name: market_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account orders info are inside data field
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.GetOrdersInfoResp'
+              type: object
+      summary: Get all account orders info
+      tags:
+      - Orders
+swagger: "2.0"

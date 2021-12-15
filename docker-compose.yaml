@@ -1,0 +1,147 @@
+version: "3"
+
+volumes:
+  datavolume: { }
+
+services:
+  db:
+    container_name: deridex-postgres
+    image: postgres
+    ports:
+      - "127.0.0.1:5432:5432"
+    restart: always
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    logging: &logging_default
+      driver: "json-file"
+      options:
+        max-file: "5"
+        max-size: "200m"
+        compress: "true"
+    volumes:
+      - datavolume:/var/lib/postgresql/data
+      - ./db/migrations/0001-init.up.sql:/docker-entrypoint-initdb.d/0001-init.up.sql
+      - ./db/seed/kovan.sql:/docker-entrypoint-initdb.d/kovan.sql
+
+  redis:
+    container_name: deridex-redis
+    image: redis:5.0
+    ports:
+      - "127.0.0.1:6379:6379"
+    restart: always
+    logging: *logging_default
+
+  api:
+    build:
+      context: ./
+      dockerfile: ./docker/api.Dockerfile
+    image: deridex-api
+    container_name: deridex-api
+    ports:
+      - "3001:3001"
+    environment:
+      - DERIDEX_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
+      - DERIDEX_REDIS_URL=redis://redis:6379/0
+      - DERIDEX_ETHEREUM_RPC_URL=https://kovan.infura.io/v3/10e6ea75b3174d3ca1c8e6cda6de0eac
+      - DERIDEX_ETHEREUM_CHAN_ID=42
+      - DERIDEX_PROXY_ADDRESS=0x6E8aDE8AD61bff517a0E946b98D7AD788b05D911
+      - DERIDEX_EXCHANGE_ADDRESS=0xC050fE2c8f2F7423a4d6E1f3b104341c07E7f532
+      - DERIDEX_RELAYER_ADDRESS=0xB43dFDBDF0defdb267C5fBe9A968F51BAF4621eE
+    volumes:
+      - datavolume:/data
+    depends_on:
+      - db
+      - redis
+    restart: always
+    logging: *logging_default
+
+  engine:
+    build:
+      context: ./
+      dockerfile: ./docker/engine.Dockerfile
+    image: deridex-engine
+    container_name: deridex-engine
+    environment:
+      - DERIDEX_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
+      - DERIDEX_REDIS_URL=redis://redis:6379/0
+      - DERIDEX_RELAYER_ADDRESS=0xB43dFDBDF0defdb267C5fBe9A968F51BAF4621eE
+      - DERIDEX_EXCHANGE_ADDRESS=0xC050fE2c8f2F7423a4d6E1f3b104341c07E7f532
+    depends_on:
+      - db
+      - redis
+      - api
+    restart: always
+    logging: *logging_default
+
+  launcher:
+    build:
+      context: ./
+      dockerfile: ./docker/launcher.Dockerfile
+    image: deridex-launcher
+    container_name: deridex-launcher
+    environment:
+      - DERIDEX_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
+      - DERIDEX_ETHEREUM_RPC_URL=https://kovan.infura.io/v3/10e6ea75b3174d3ca1c8e6cda6de0eac
+      - DERIDEX_PROXY_ADDRESS=0x6E8aDE8AD61bff517a0E946b98D7AD788b05D911
+      - DERIDEX_RELAYER_PK=f02b4ce795e371a5a42d488f301f85dbb8c5af50082c2bf2c0f8ff6a20dcd45f
+      - DERIDEX_GAS_LIMIT=500000
+      - DERIDEX_MANUAL_GAS_PRICE=2000000000 # 2 gwei
+    depends_on:
+      - db
+    restart: always
+    logging: *logging_default
+
+  watcher:
+    build:
+      context: ./
+      dockerfile: ./docker/watcher.Dockerfile
+    image: deridex-watcher
+    container_name: deridex-watcher
+    environment:
+      - DERIDEX_REDIS_URL=redis://redis:6379/0
+      - DERIDEX_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
+      - DERIDEX_ETHEREUM_RPC_URL=https://kovan.infura.io/v3/10e6ea75b3174d3ca1c8e6cda6de0eac
+    depends_on:
+      - db
+      - redis
+    restart: always
+    logging: *logging_default
+
+  websocket:
+    build:
+      context: ./
+      dockerfile: ./docker/websocket.Dockerfile
+    image: deridex-websocket
+    container_name: deridex-websocket
+    ports:
+      - "3002:3002"
+    environment:
+      - DERIDEX_REDIS_URL=redis://redis:6379/0
+      - DERIDEX_API_URL=http://api:3001/api/v1
+      - DERIDEX_CHANNELS=TSLA-USDC
+    depends_on:
+      - redis
+      - api
+    restart: always
+    logging: *logging_default
+
+  bot:
+    build:
+      context: ./
+      dockerfile: ./docker/bot.Dockerfile
+    image: deridex-bot
+    container_name: deridex-bot
+    depends_on:
+      - api
+    environment:
+      - DERIDEX_API_URL=http://api:3001/api/v1
+      - DERIDEX_BOT_ADDRESS_1=0x74628399D6BE80f83F418f1DF6c7b7aa18C13db0
+      - DERIDEX_BOT_PRIVATE_KEY_1=a845d6234627fd4927c354c7d0cc1a6469678954c03ff98f4af836fff409b2da
+      - DERIDEX_BOT_ADDRESS_2=0x9C8c32f402dC69b1811Dd3652A4C26d7849FfE95
+      - DERIDEX_BOT_PRIVATE_KEY_2=898348a863bdb21871aae286c289b7b8e570f274130eae1182371af713e508a8
+      - DERIDEX_BOT_MARKET_ID=TSLA-USDC
+      - DERIDEX_BOT_MIN_AMOUNT=0.001
+      - DERIDEX_BOT_MAX_AMOUNT=0.002
+      - DERIDEX_BOT_TICKER_TIME=30s
+    restart: always
+    logging: *logging_default

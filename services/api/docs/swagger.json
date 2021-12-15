@@ -1,0 +1,870 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a documentation for the Deridex market backend API.",
+        "title": "Deridex Backend API",
+        "contact": {
+            "name": "API Support",
+            "url": "https://deridex-dev.ml/support",
+            "email": "support@deridex-dev.ml"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "host": "deridex-dev.ml",
+    "basePath": "/api/v1",
+    "paths": {
+        "/markets": {
+            "get": {
+                "description": "Returns list of market. Response contains universal datastructure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Markets"
+                ],
+                "summary": "Get list of markets",
+                "responses": {
+                    "200": {
+                        "description": "Array of existing markets",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/handlers.Market"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/markets/{market_id}/candles": {
+            "get": {
+                "description": "Returns trading view candles of the market. Response contains universal datastructure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Markets"
+                ],
+                "summary": "Get trading view candles of the market by market id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Market ID",
+                        "name": "market_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Period start",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Period end",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Data granularity in seconds",
+                        "name": "granularity",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Candle values are inside data field",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.CandlesResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/markets/{market_id}/orderbook": {
+            "get": {
+                "description": "Returns market order book. Response contains universal data structure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Markets"
+                ],
+                "summary": "Get order book of the market by market id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Market ID",
+                        "name": "market_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Market orderbook is inside data field",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.Snapshot"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/markets/{market_id}/trades": {
+            "get": {
+                "description": "Returns all market trades. Response contains universal datastructure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Markets"
+                ],
+                "summary": "Get market trades by market id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Market ID",
+                        "name": "market_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Market trades are inside data field",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.TradesResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/markets/{market_id}/trades/mine": {
+            "get": {
+                "description": "Returns all account trades in the certain market. Response contains universal datastructure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty. This request requires authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Markets"
+                ],
+                "summary": "Get account trades of the certain market by market id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Market ID",
+                        "name": "market_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Account trades are inside data field",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.TradesResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/orders": {
+            "get": {
+                "description": "Returns all account orders. Response contains universal data structure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty. This request requires authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get all account orders",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Market ID",
+                        "name": "market_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status or statuses separated by comma",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Rows per page",
+                        "name": "perPage",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Account orders are inside data field",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.OrdersResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Places existing order on the market. Response contains universal datastructure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty. This request requires authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Place existing order",
+                "parameters": [
+                    {
+                        "description": "Contains parameters of existing order",
+                        "name": "order_params",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PlaceOrderReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contains result of order placing",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/build/limit": {
+            "post": {
+                "description": "Builds and returns new limit order. Response contains universal data structure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty. This request requires authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Build a new limit order",
+                "parameters": [
+                    {
+                        "description": "Contains parameters of new order",
+                        "name": "order_params",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BuildLimitOrderReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order data is inside data field",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.BuildOrderResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/build/market": {
+            "post": {
+                "description": "Builds and returns new market order. Response contains universal datastructure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty. This request requires authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Build a new market order",
+                "parameters": [
+                    {
+                        "description": "Contains parameters of new order",
+                        "name": "order_params",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BuildMarketOrderReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order data is inside data field",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.BuildOrderResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/info": {
+            "get": {
+                "description": "Returns all account orders info. Response contains universal datastructure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty. This request requires authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get all account orders info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Market ID",
+                        "name": "market_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Account orders info are inside data field",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.GetOrdersInfoResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/{order_id}": {
+            "get": {
+                "description": "Returns single order by order id. Response contains universal data structure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty. This request requires authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get single order by order id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "order_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order data is inside data field",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.Order"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Cancels order placed on the market. Response contains universal datastructure. 'data' field contains response value, in case of errors - 'status' and 'desc' contain description of the error, and the 'data' value is empty. This request requires authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Cancel placed order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "order_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contains result of order cancellation",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.Response": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object"
+                },
+                "desc": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.Bar": {
+            "type": "object",
+            "properties": {
+                "close": {
+                    "type": "number"
+                },
+                "high": {
+                    "type": "number"
+                },
+                "low": {
+                    "type": "number"
+                },
+                "open": {
+                    "type": "number"
+                },
+                "time": {
+                    "type": "integer"
+                },
+                "volume": {
+                    "type": "number"
+                }
+            }
+        },
+        "handlers.BuildLimitOrderReq": {
+            "type": "object",
+            "required": [
+                "amount",
+                "market_id",
+                "order_type",
+                "price",
+                "side"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "integer"
+                },
+                "market_id": {
+                    "type": "string"
+                },
+                "order_type": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                },
+                "side": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BuildMarketOrderReq": {
+            "type": "object",
+            "required": [
+                "amount",
+                "market_id",
+                "side"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "integer"
+                },
+                "market_id": {
+                    "type": "string"
+                },
+                "side": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BuildOrderResp": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.CandlesResp": {
+            "type": "object",
+            "properties": {
+                "candles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Bar"
+                    }
+                }
+            }
+        },
+        "handlers.GetOrdersInfoResp": {
+            "type": "object",
+            "properties": {
+                "unrealized_pnl": {
+                    "type": "number"
+                }
+            }
+        },
+        "handlers.Market": {
+            "type": "object",
+            "properties": {
+                "amount24h": {
+                    "type": "number"
+                },
+                "amount_decimals": {
+                    "type": "integer"
+                },
+                "base_token": {
+                    "type": "string"
+                },
+                "base_token_address": {
+                    "type": "string"
+                },
+                "base_token_decimals": {
+                    "type": "integer"
+                },
+                "base_token_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_price": {
+                    "type": "number"
+                },
+                "min_order_size": {
+                    "type": "number"
+                },
+                "price24h": {
+                    "type": "number"
+                },
+                "price_decimals": {
+                    "type": "integer"
+                },
+                "quote_token": {
+                    "type": "string"
+                },
+                "quote_token_address": {
+                    "type": "string"
+                },
+                "quote_token_decimals": {
+                    "type": "integer"
+                },
+                "quote_token_name": {
+                    "type": "string"
+                },
+                "quote_token_volume24h": {
+                    "type": "number"
+                },
+                "supported_order_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "handlers.OrdersResp": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Order"
+                    }
+                }
+            }
+        },
+        "handlers.PlaceOrderReq": {
+            "type": "object",
+            "required": [
+                "order_id",
+                "signature"
+            ],
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.Snapshot": {
+            "type": "object",
+            "properties": {
+                "asks": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "bids": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "sequence": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.TradesResp": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "trades": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Trade"
+                    }
+                }
+            }
+        },
+        "models.Order": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "available_amount": {
+                    "type": "number"
+                },
+                "canceled_amount": {
+                    "type": "number"
+                },
+                "confirmed_amount": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "flags": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "market_id": {
+                    "type": "string"
+                },
+                "pending_amount": {
+                    "type": "number"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "side": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "trader_address": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Trade": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "executed_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "maker": {
+                    "type": "string"
+                },
+                "maker_order_id": {
+                    "type": "string"
+                },
+                "market_id": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "taker": {
+                    "type": "string"
+                },
+                "taker_order_id": {
+                    "type": "string"
+                },
+                "taker_side": {
+                    "type": "string"
+                },
+                "transaction_hash": {
+                    "type": "string"
+                },
+                "transaction_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
